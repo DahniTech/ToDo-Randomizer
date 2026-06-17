@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<meta name="theme-color" content="#ffffff" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Todo Randomizer" />
+<title>Todo Randomizer</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg-secondary: #f5f5f5;
+    --text: #1a1a1a;
+    --text-secondary: #666;
+    --text-hint: #999;
+    --border: rgba(0,0,0,0.12);
+    --border-strong: rgba(0,0,0,0.25);
+    --success: #2d7a4f;
+    --radius: 10px;
+    --radius-sm: 7px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1e;
+      --bg-secondary: #2c2c2e;
+      --text: #f2f2f7;
+      --text-secondary: #aeaeb2;
+      --text-hint: #636366;
+      --border: rgba(255,255,255,0.12);
+      --border-strong: rgba(255,255,255,0.25);
+      --success: #4cd964;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+  }
+
+  .header {
+    padding: 20px 20px 12px;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .header p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  .section { padding: 16px 20px; }
+
+  .section-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+  }
+
+  .add-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .add-row input {
+    flex: 1;
+    padding: 11px 14px;
+    font-size: 16px;
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  .add-row input:focus {
+    border-color: #007aff;
+    box-shadow: 0 0 0 3px rgba(0,122,255,0.15);
+  }
+
+  .add-row input::placeholder { color: var(--text-hint); }
+
+  .btn {
+    padding: 11px 18px;
+    font-size: 15px;
+    font-weight: 500;
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.1s;
+  }
+
+  .btn:active { background: var(--bg-secondary); }
+
+  .btn-primary {
+    width: 100%;
+    padding: 13px;
+    font-size: 16px;
+    border-radius: var(--radius);
+    margin-top: 4px;
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .item-list { display: flex; flex-direction: column; gap: 6px; }
+
+  .todo-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 14px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border);
+  }
+
+  .todo-item span {
+    font-size: 15px;
+    color: var(--text);
+    flex: 1;
+    margin-right: 8px;
+  }
+
+  .remove-btn {
+    background: none;
+    border: none;
+    color: var(--text-hint);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 2px 4px;
+    line-height: 1;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .remove-btn:active { color: var(--text); }
+
+  .divider {
+    border: none;
+    border-top: 0.5px solid var(--border);
+    margin: 4px 0;
+  }
+
+  .lock-msg {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 10px;
+    min-height: 18px;
+  }
+
+  .result-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+
+  .result-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: var(--bg);
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius);
+  }
+
+  .result-item.done {
+    opacity: 0.6;
+  }
+
+  .result-item.done label {
+    text-decoration: line-through;
+    color: var(--text-secondary);
+  }
+
+  .result-item input[type=checkbox] {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    cursor: pointer;
+    accent-color: #007aff;
+  }
+
+  .result-item label {
+    font-size: 16px;
+    color: var(--text);
+    cursor: pointer;
+    line-height: 1.3;
+  }
+
+  .empty {
+    font-size: 14px;
+    color: var(--text-hint);
+    text-align: center;
+    padding: 12px 0;
+  }
+
+  .all-done-banner {
+    display: none;
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: rgba(45, 122, 79, 0.1);
+    border: 0.5px solid rgba(45, 122, 79, 0.3);
+    border-radius: var(--radius-sm);
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--success);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Todo Randomizer</h1>
+  <p>Add tasks, randomize 3, get it done.</p>
+</div>
+
+<div class="section">
+  <p class="section-label">Your tasks</p>
+  <div class="add-row">
+    <input type="text" id="new-item" placeholder="Add a task..." maxlength="80" />
+    <button class="btn" onclick="addItem()">Add</button>
+  </div>
+  <div style="margin-top:12px;" id="item-list">
+    <p class="empty">No tasks yet — add some above</p>
+  </div>
+</div>
+
+<hr class="divider" />
+
+<div class="section">
+  <button class="btn btn-primary" id="rand-btn" onclick="randomize()">
+    🎲 Randomize 3 tasks
+  </button>
+  <p class="lock-msg" id="lock-msg"></p>
+
+  <div class="result-list" id="result-list"></div>
+  <div class="all-done-banner" id="all-done-banner">✓ All done! Randomize is unlocked.</div>
+</div>
+
+<script>
+const LOCK_KEY = 'tdr_lock';
+const RESULTS_KEY = 'tdr_results';
+const ITEMS_KEY = 'tdr_items';
+
+let items = [], results = [], lockUntil = 0, ticker = null;
+
+function save() {
+  try {
+    localStorage.setItem(ITEMS_KEY, JSON.stringify(items));
+    localStorage.setItem(LOCK_KEY, String(lockUntil));
+    localStorage.setItem(RESULTS_KEY, JSON.stringify(results));
+  } catch(e) {}
+}
+
+function load() {
+  try {
+    items = JSON.parse(localStorage.getItem(ITEMS_KEY) || '[]');
+    lockUntil = parseInt(localStorage.getItem(LOCK_KEY) || '0');
+    results = JSON.parse(localStorage.getItem(RESULTS_KEY) || '[]');
+  } catch(e) { items = []; lockUntil = 0; results = []; }
+}
+
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function addItem() {
+  const inp = document.getElementById('new-item');
+  const val = inp.value.trim();
+  if (!val) return;
+  items.push(val);
+  inp.value = '';
+  save();
+  renderItems();
+}
+
+document.getElementById('new-item').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addItem();
+});
+
+function removeItem(i) {
+  items.splice(i, 1);
+  save();
+  renderItems();
+}
+
+function renderItems() {
+  const list = document.getElementById('item-list');
+  if (items.length === 0) {
+    list.innerHTML = '<p class="empty">No tasks yet — add some above</p>';
+    return;
+  }
+  list.innerHTML = items.map((it, i) =>
+    `<div class="todo-item" style="margin-top:6px">
+      <span>${esc(it)}</span>
+      <button class="remove-btn" onclick="removeItem(${i})" aria-label="Remove">×</button>
+    </div>`
+  ).join('');
+}
+
+function randomize() {
+  if (Date.now() < lockUntil) return;
+  if (items.length < 3) { alert('Add at least 3 tasks first!'); return; }
+  const shuffled = [...items].sort(() => Math.random() - 0.5);
+  results = shuffled.slice(0, 3).map(t => ({ text: t, done: false }));
+  lockUntil = Date.now() + 12 * 60 * 60 * 1000;
+  document.getElementById('all-done-banner').style.display = 'none';
+  save();
+  renderResults();
+  updateLock();
+}
+
+function toggleDone(i) {
+  results[i].done = !results[i].done;
+
+  if (results[i].done) {
+    const idx = items.indexOf(results[i].text);
+    if (idx !== -1) { items.splice(idx, 1); renderItems(); }
+  } else {
+    if (!items.includes(results[i].text)) { items.push(results[i].text); renderItems(); }
+  }
+
+  const allDone = results.every(r => r.done);
+  if (allDone) {
+    lockUntil = 0;
+    results = [];
+    clearInterval(ticker); ticker = null;
+    save();
+    renderResults();
+    updateLock();
+    const banner = document.getElementById('all-done-banner');
+    banner.style.display = 'block';
+    setTimeout(() => { banner.style.display = 'none'; }, 4000);
+    return;
+  }
+
+  save();
+  renderResults();
+}
+
+function renderResults() {
+  const el = document.getElementById('result-list');
+  if (results.length === 0) { el.innerHTML = ''; return; }
+  el.innerHTML = results.map((r, i) =>
+    `<div class="result-item${r.done ? ' done' : ''}">
+      <input type="checkbox" id="r${i}" ${r.done ? 'checked' : ''} onchange="toggleDone(${i})" />
+      <label for="r${i}">${esc(r.text)}</label>
+    </div>`
+  ).join('');
+}
+
+function updateLock() {
+  const btn = document.getElementById('rand-btn');
+  const msg = document.getElementById('lock-msg');
+  const now = Date.now();
+  if (now < lockUntil) {
+    btn.disabled = true;
+    const rem = lockUntil - now;
+    const h = Math.floor(rem / 3600000);
+    const m = Math.floor((rem % 3600000) / 60000);
+    const s = Math.floor((rem % 60000) / 1000);
+    msg.textContent = `Locked — ${h}h ${m}m ${s}s remaining`;
+    if (!ticker) ticker = setInterval(updateLock, 1000);
+  } else {
+    btn.disabled = false;
+    msg.textContent = '';
+    clearInterval(ticker); ticker = null;
+  }
+}
+
+load();
+renderItems();
+renderResults();
+updateLock();
+</script>
+</body>
+</html>
